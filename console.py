@@ -114,17 +114,37 @@ class HBNBCommand(cmd.Cmd):
         pass
 
     def do_create(self, args):
-        """ Create an object of any class"""
-        if not args:
-            print("** class name missing **")
-            return
-        elif args not in HBNBCommand.classes:
-            print("** class doesn't exist **")
-            return
-        new_instance = HBNBCommand.classes[args]()
-        storage.save()
-        print(new_instance.id)
-        storage.save()
+        """ Create an object of any class with parameters
+        usage: create <Class name> <key 1>=<value 1> <key 2>=<value 2>...
+        Exceptions:
+            SyntaxError: If the command line input is not accurate..
+            NameError: If the specified class name doesn't exist.
+        """
+        try:
+            if not line:
+                raise SyntaxError()
+            my_list = line.split(" ")
+            if my_list:
+                class_name = my_list[0]
+            else:
+                raise SyntaxError()
+
+            kwargs = {}
+
+            for pair in my_list[1:]:
+                key, value = pair.split("=")
+                if self.is_float(value):
+                    kwargs[key] = float(value)
+                elif self.is_int(value):
+                    kwargs[key] = int(value)
+                else:
+                    value = value.replace('-', ' ')
+                    kwargs[key] = value.strip('"\'')
+
+            obj = self.all_classes[class_name](**kwargs)
+            storage.new(obj)
+            obj.save()
+            print(obj.id)
 
     def help_create(self):
         """ Help information for the create method """
@@ -319,6 +339,7 @@ class HBNBCommand(cmd.Cmd):
         """ Help information for the update class """
         print("Updates an object with new information")
         print("Usage: update <className> <id> <attName> <attVal>\n")
+
 
 if __name__ == "__main__":
     HBNBCommand().cmdloop()
